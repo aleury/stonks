@@ -19,11 +19,6 @@ struct Opts {
     from: String,
 }
 
-struct StockHistory {
-    symbol: String,
-    closes: Vec<f64>,
-}
-
 struct StockStats {
     symbol: String,
     last_price: f64,
@@ -180,7 +175,7 @@ async fn fetch_closing_data(
     symbol: &str,
     from: &DateTime<Utc>,
     to: &DateTime<Utc>,
-) -> std::io::Result<StockHistory> {
+) -> std::io::Result<Vec<f64>> {
     let provider = yahoo::YahooConnector::new();
 
     let response = provider
@@ -199,10 +194,17 @@ async fn fetch_closing_data(
         quotes.iter().map(|q| q.adjclose).collect()
     };
 
-    Ok(StockHistory {
-        symbol: symbol.to_owned(),
-        closes,
-    })
+    Ok(closes)
+}
+
+async fn fetch_stock_stats(
+    symbol: &str,
+    from: &DateTime<Utc>,
+    to: &DateTime<Utc>,
+) -> std::io::Result<StockStats> {
+    let closes = fetch_closing_data(symbol, &from, &to).await?;
+    let stats = StockStats::new(symbol.to_owned(), closes).await;
+    Ok(stats)
 }
 
 #[tokio::main]
@@ -210,17 +212,15 @@ async fn main() -> std::io::Result<()> {
     let opts: Opts = Opts::parse();
     let from: DateTime<Utc> = opts.from.parse().expect("Couldn't parse the 'from' date.");
     let to: DateTime<Utc> = Utc::now();
-    let symbols = opts.symbols.split(",");
 
-    let stock_histories = join_all(symbols.map(|s| fetch_closing_data(s, &from, &to))).await;
-
-    let stock_stats = join_all(
-        stock_histories
-            .into_iter()
-            .filter_map(|r| r.ok())
-            .map(|s| StockStats::new(s.symbol.to_owned(), s.closes.to_owned())),
+    let results = join_all(
+        opts.symbols
+            .split(",")
+            .map(|s| fetch_stock_stats(s, &from, &to)),
     )
     .await;
+
+    let stock_stats: Vec<_> = results.into_iter().filter_map(|r| r.ok()).collect();
 
     println!("period start,symbol,price,change %,min,max,30d avg");
     for stats in stock_stats {

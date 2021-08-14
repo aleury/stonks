@@ -214,7 +214,7 @@ async fn main() -> std::io::Result<()> {
 
     let stock_histories = join_all(symbols.map(|s| fetch_closing_data(s, &from, &to))).await;
 
-    let stock_stats: Vec<_> = join_all(
+    let stock_stats = join_all(
         stock_histories
             .into_iter()
             .filter_map(|r| r.ok())

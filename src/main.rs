@@ -19,7 +19,6 @@ struct Opts {
     from: String,
 }
 
-#[derive(Debug)]
 struct StockHistory {
     symbol: String,
     closes: Vec<f64>,

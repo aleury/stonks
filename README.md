@@ -1,3 +1,5 @@
+[![Rust](https://github.com/aleury/stonks/actions/workflows/rust.yml/badge.svg)](https://github.com/aleury/stonks/actions/workflows/rust.yml)
+
 # stonks
 Track stonk prices.
 

@@ -40,6 +40,28 @@ trait StockSignal {
 ///
 struct MinPrice;
 
+///
+/// Find the maximum in a series of f64.
+///
+struct MaxPrice;
+
+///
+/// Calculates the absolute and relative difference between the beginning and ending of a series of f64.
+/// The relative difference is relative to the beginning.
+///
+/// # Returns
+///
+/// A tuple `(absolute, relative)` difference.
+///
+struct PriceDiff;
+
+///
+/// Calculate a simple moving average of a f64 series.
+///
+struct WindowedSMA {
+    window_size: usize,
+}
+
 impl StockSignal for MinPrice {
     type SignalType = f64;
 
@@ -52,11 +74,6 @@ impl StockSignal for MinPrice {
     }
 }
 
-///
-/// Find the maximum in a series of f64.
-///
-struct MaxPrice;
-
 impl StockSignal for MaxPrice {
     type SignalType = f64;
 
@@ -68,16 +85,6 @@ impl StockSignal for MaxPrice {
         Some(series.iter().fold(f64::MIN, |acc, x| acc.max(*x)))
     }
 }
-
-///
-/// Calculates the absolute and relative difference between the beginning and ending of a series of f64.
-/// The relative difference is relative to the beginning.
-///
-/// # Returns
-///
-/// A tuple `(absolute, relative)` difference.
-///
-struct PriceDiff;
 
 impl StockSignal for PriceDiff {
     type SignalType = (f64, f64);
@@ -100,10 +107,6 @@ impl StockSignal for PriceDiff {
 
         Some((abs_diff, pct_diff))
     }
-}
-
-struct WindowedSMA {
-    window_size: usize,
 }
 
 impl StockSignal for WindowedSMA {

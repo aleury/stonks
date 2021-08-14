@@ -129,7 +129,7 @@ impl StockSignal for WindowedSMA {
 ///
 /// Fetch the closing prices of a stonk over a period of time.
 ///
-fn fetch_closing_data(
+async fn fetch_closing_data(
     symbol: &str,
     from: &DateTime<Utc>,
     to: &DateTime<Utc>,
@@ -138,6 +138,7 @@ fn fetch_closing_data(
 
     let response = provider
         .get_quote_history(symbol, *from, *to)
+        .await
         .map_err(|_| Error::from(ErrorKind::InvalidData))?;
 
     let mut quotes = response
@@ -152,14 +153,15 @@ fn fetch_closing_data(
     Ok(quotes.iter().map(|q| q.adjclose).collect())
 }
 
-fn main() -> std::io::Result<()> {
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
     let opts: Opts = Opts::parse();
     let from: DateTime<Utc> = opts.from.parse().expect("Couldn't parse the 'from' date.");
     let to: DateTime<Utc> = Utc::now();
 
     println!("period start,symbol,price,change %,min,max,30d avg");
     for symbol in opts.symbols.split(",") {
-        let closes = fetch_closing_data(symbol, &from, &to)?;
+        let closes = fetch_closing_data(symbol, &from, &to).await?;
         if !closes.is_empty() {
             let min_price = MinPrice {};
             let max_price = MaxPrice {};
